@@ -56,6 +56,44 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+
+	// Define the noise distributions
+	normal_distribution<double> n_x(0, std_pos[0]);
+	normal_distribution<double> n_y(0, std_pos[1]);
+	normal_distribution<double> n_theta(0, std_pos[2]);
+
+	// Loop over all the particles and predict the new particles based on the CTRV model
+
+	for (unsigned int i = 0; i < particles.size(); i++) {
+		Particle p;
+		p = particles[i];
+
+		double x_p, y_p, theta_p;
+		x_p = p.x;
+		y_p = p.y;
+		theta_p = p.theta;
+
+		double new_x, new_y, new_theta;
+
+		if (fabs(yaw_rate) < 0.00001) {
+
+			new_x = x_p + velocity * cos(theta_p) * delta_t + n_x(gen);
+			new_y = y_p + velocity * sin(theta_p) * delta_t + n_y(gen);
+			new_theta = theta_p + n_theta(gen);
+
+		}
+		else
+		{
+			new_x = x_p + (velocity / yaw_rate) * (sin(theta_p + yaw_rate * delta_t) - sin(theta_p)) + n_x(gen);
+			new_y = y_p + (velocity / yaw_rate) * (cos(theta_p) - cos(theta_p + yaw_rate * delta_t)) + n_y(gen);
+			new_theta = theta_p + yaw_rate * delta_t + n_theta(gen);
+		}
+		// Update the predicted particles
+		particles[i].x = new_x;
+		particles[i].y = new_y;
+		particles[i].theta = new_theta;
+	}
+
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
@@ -64,6 +102,42 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
 
+	// Loop over all the obeservation and compare each of the to the predicted landmarks for find the best match.
+
+	for (unsigned int i = 0; i < observations.size(); i++) {
+		LandmarkObs obs;
+		obs = observations[i];
+
+		double x_obs, y_obs;
+		x_obs = obs.x;
+		y_obs = obs.y;
+
+		double min_distance;
+		min_distance = numeric_limits<double>::infinity();
+
+		// Define a default ID for the cases where no match is found.
+		int ID = -1;
+		// Loop over all the predicted landmarks to find the best match for the selected observation.
+		for (unsigned int j = 0; predicted.size(); j++) {
+			LandmarkObs pr;
+			pr = predicted[j];
+
+			double x_pr, y_pr;
+			x_pr = pr.x;
+			y_pr = pr.y;
+
+			double distance;
+			distance = dist(x_obs, y_obs, x_pr, y_pr);
+
+			if (distance < min_distance)
+			{
+				ID = pr.id;
+				min_distance = distance;
+			}
+
+		}
+		observations[i].id = ID;
+	}
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
