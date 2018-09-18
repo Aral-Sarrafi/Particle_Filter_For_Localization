@@ -42,6 +42,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		p.id = i;
 
 		p.weight = 1.0;
+
+		particles.push_back(p);
 		weights.push_back(p.weight);
 
 	}
@@ -54,7 +56,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
-
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
