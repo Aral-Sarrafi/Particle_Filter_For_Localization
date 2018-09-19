@@ -1,4 +1,5 @@
-# Overview
+# Particle Filter for Sparse Localization
+<img src = "PF.gif" align="center" >
 This repository contains all the code needed to complete the final project for the Localization course in Udacity's Self-Driving Car Nanodegree.
 
 #### Submission
